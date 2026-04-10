@@ -189,7 +189,7 @@ function renderVideoCard(v, currentUser) {
 
   const canDownload = v.can_access;
   const publishedCount = v.published_count || 0;
-  const publishedActive = !!v.published_by_me;
+  const publishedActive = publishedCount > 0;
   const publishedUsers = Array.isArray(v.published_usernames) ? v.published_usernames : [];
   const previewHtml = canDownload
     ? `<video
@@ -269,8 +269,9 @@ async function togglePublished(videoId) {
     const btn = document.getElementById(`published-btn-${videoId}`);
     const count = document.getElementById(`published-count-${videoId}`);
     const users = document.getElementById(`published-users-${videoId}`);
-    if (btn) btn.classList.toggle('active', !!data.published_by_me);
-    if (count) count.textContent = data.published_count ?? 0;
+    const publishedCount = data.published_count ?? 0;
+    if (btn) btn.classList.toggle('active', publishedCount > 0);
+    if (count) count.textContent = publishedCount;
     if (users) users.innerHTML = renderPublishedUsers(data.published_usernames || []);
   } catch (err) {
     showToast(err.message, 'error');
