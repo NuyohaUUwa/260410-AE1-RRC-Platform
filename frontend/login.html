@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 - AE1人人创管理平台</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <i class="fa-solid fa-play-circle" style="font-size:3rem;color:var(--primary)"></i>
+        <h1>AE1科人人创管理平台</h1>
+        <p>人人创视频资源共享与管理平台</p>
+      </div>
+
+      <div id="alert-box"></div>
+
+      <!-- Tab 切换 -->
+      <div class="login-tabs">
+        <button class="login-tab active" id="tab-login" onclick="switchTab('login')">登录</button>
+        <button class="login-tab" id="tab-register" onclick="switchTab('register')">注册</button>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="form-login" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label><i class="fa-solid fa-user"></i> 用户名</label>
+          <input type="text" id="login-username" placeholder="请输入用户名" required autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-lock"></i> 密码</label>
+          <input type="password" id="login-password" placeholder="请输入密码" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="btn-login">
+          <i class="fa-solid fa-right-to-bracket"></i> 登录
+        </button>
+      </form>
+
+      <!-- 注册表单（默认隐藏） -->
+      <form id="form-register" onsubmit="handleRegister(event)" style="display:none">
+        <div class="form-group">
+          <label><i class="fa-solid fa-user"></i> 用户名(支持中文，推荐使用姓名或者工号)</label>
+          <input type="text" id="reg-username" placeholder="2-32个字符" required minlength="2" maxlength="32" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-lock"></i> 密码</label>
+          <input type="password" id="reg-password" placeholder="至少6位" required minlength="6" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-lock"></i> 确认密码</label>
+          <input type="password" id="reg-password2" placeholder="再次输入密码" required autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="btn-register">
+          <i class="fa-solid fa-user-plus"></i> 注册
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/auth.js"></script>
+</body>
+</html>

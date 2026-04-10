@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AE1人人创管理平台</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ── 顶栏 ── -->
+  <header class="topbar">
+    <a class="topbar-brand" href="/">
+      <i class="fa-solid fa-play-circle"></i>
+      <span>AE1人人创管理平台</span>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-user">
+      <span id="topbar-username" class="username"></span>
+      <span id="topbar-badge" class="badge"></span>
+      <button class="btn btn-ghost btn-sm" onclick="openPasswordModal()">
+        <i class="fa-solid fa-key"></i> 修改密码
+      </button>
+      <!-- Admin 工具按钮 -->
+      <button id="btn-admin-panel" class="btn btn-ghost btn-sm" onclick="openAdminPanel()" style="display:none">
+        <i class="fa-solid fa-gear"></i> 管理
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> 登出
+      </button>
+    </div>
+  </header>
+
+  <div class="main-body">
+
+    <!-- ── 侧边栏 ── -->
+    <aside class="sidebar">
+
+      <!-- 工具链接区 -->
+      <div class="sidebar-section">
+        <h4><i class="fa-solid fa-toolbox"></i> 工具链接</h4>
+        <div id="tool-links-list">
+          <div class="empty-state" style="padding:1rem 0">
+            <i class="fa-solid fa-link" style="font-size:1.5rem"></i>
+            <p style="font-size:.82rem;margin-top:.3rem">暂无工具链接</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 留言反馈区 -->
+      <div class="sidebar-section">
+        <h4><i class="fa-solid fa-comments"></i> 留言反馈</h4>
+        <div class="message-input-wrap">
+          <textarea id="msg-input" placeholder="写下你的留言或反馈…" rows="3"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="submitMessage()">
+            <i class="fa-solid fa-paper-plane"></i> 发送
+          </button>
+        </div>
+        <div class="divider"></div>
+        <div id="messages-list" class="message-list"></div>
+      </div>
+
+    </aside>
+
+    <!-- ── 主内容区 ── -->
+    <main class="main-content">
+
+      <!-- 公告区 -->
+      <div class="card announcement-card" id="announcement-section">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-bullhorn"></i> 平台公告</h2>
+          <button id="btn-edit-announcement" class="btn btn-ghost btn-sm" onclick="openAnnouncementEditor()" style="display:none">
+            <i class="fa-solid fa-pen"></i> 编辑公告
+          </button>
+        </div>
+        <div class="announcement-body" id="announcement-body">
+          <div class="spinner"></div>
+        </div>
+        <div class="announcement-meta" id="announcement-meta"></div>
+      </div>
+
+      <!-- 视频上传区 -->
+      <details class="card upload-card" id="upload-section">
+        <summary class="section-header upload-summary">
+          <h2><i class="fa-solid fa-cloud-arrow-up"></i> 上传视频</h2>
+          <span class="upload-summary-hint">默认折叠，按需展开</span>
+        </summary>
+        <div class="upload-form">
+          <div class="form-group" style="margin-bottom:0">
+            <label>视频标题 <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="upload-title" placeholder="请输入视频标题" maxlength="200" />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>视频文案 <span style="color:var(--text-light);font-weight:400">(可选)</span></label>
+            <textarea id="upload-desc" placeholder="描述视频内容…" rows="2" style="resize:vertical"></textarea>
+          </div>
+
+          <div class="upload-drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <i class="fa-solid fa-film"></i>
+            <p id="drop-text">点击选择视频文件，或将文件拖拽至此处</p>
+            <p style="font-size:.78rem;margin-top:.3rem;color:var(--text-light)">支持 MP4、AVI、MOV、MKV、WebM 等格式</p>
+            <input type="file" id="file-input" accept="video/*" onchange="onFileSelected(this)" />
+          </div>
+
+          <div id="selected-file-info" style="display:none" class="selected-file">
+            <i class="fa-solid fa-film"></i>
+            <span id="selected-file-name"></span>
+            <span id="selected-file-size" style="color:var(--text-muted);margin-left:auto"></span>
+            <button class="btn btn-secondary btn-sm" onclick="clearFileSelection()" style="flex-shrink:0">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <div id="upload-progress-wrap" style="display:none">
+            <div style="display:flex;justify-content:space-between;font-size:.83rem;color:var(--text-muted)">
+              <span>上传中…</span>
+              <span id="upload-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" id="upload-progress-fill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-upload" onclick="uploadVideo()" style="align-self:flex-start">
+            <i class="fa-solid fa-cloud-arrow-up"></i> 开始上传
+          </button>
+        </div>
+      </details>
+
+      <!-- 视频列表区 -->
+      <div class="card video-list-card">
+        <div class="section-header">
+          <h2><i class="fa-solid fa-film"></i> 视频资源</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadVideos()">
+            <i class="fa-solid fa-rotate-right"></i> 刷新
+          </button>
+        </div>
+        <div id="video-grid" class="video-grid">
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="spinner"></div>
+            <p style="margin-top:.5rem">加载中…</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── Toast 容器 ── -->
+<div id="toast-container"></div>
+
+<!-- ── 公告编辑模态框 ── -->
+<div class="modal-overlay" id="modal-announcement">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-pen"></i> 编辑公告</h3>
+      <button class="modal-close" onclick="closeModal('modal-announcement')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:.8rem">支持 Markdown 语法，左侧编辑，右侧实时预览</p>
+      <div class="md-editor">
+        <textarea id="announcement-editor" placeholder="# 公告标题&#10;&#10;公告内容…" oninput="previewAnnouncement()"></textarea>
+        <div class="md-preview" id="announcement-preview"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-announcement')">取消</button>
+      <button class="btn btn-primary" onclick="saveAnnouncement()">
+        <i class="fa-solid fa-floppy-disk"></i> 保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 管理面板模态框 ── -->
+<div class="modal-overlay" id="modal-admin">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-gear"></i> 管理面板</h3>
+      <button class="modal-close" onclick="closeModal('modal-admin')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Tab -->
+      <div class="login-tabs" id="admin-tabs" style="margin-bottom:1.2rem">
+        <button class="login-tab active" onclick="switchAdminTab('tools')">工具链接</button>
+        <button class="login-tab" id="admin-tab-users" onclick="switchAdminTab('users')">用户管理</button>
+      </div>
+
+      <!-- 工具链接管理 -->
+      <div id="admin-panel-tools">
+        <div id="tool-manage-list" style="margin-bottom:1rem;max-height:220px;overflow-y:auto"></div>
+        <div class="divider"></div>
+        <p style="font-size:.88rem;font-weight:600;margin:.8rem 0 .5rem">添加工具链接</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+          <div class="form-group" style="margin-bottom:0">
+            <label>名称</label>
+            <input type="text" id="tool-name" placeholder="工具名称" />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>图标 (FA class)</label>
+            <input type="text" id="tool-icon" placeholder="fa-link" value="fa-link" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;grid-column:1/-1">
+            <label>链接 URL</label>
+            <input type="url" id="tool-url" placeholder="https://..." />
+          </div>
+          <div class="form-group" style="margin-bottom:0;grid-column:1/-1">
+            <label>描述（可选）</label>
+            <input type="text" id="tool-desc" placeholder="简短描述" />
+          </div>
+        </div>
+        <div style="margin-top:.8rem">
+          <button class="btn btn-primary btn-sm" onclick="addTool()">
+            <i class="fa-solid fa-plus"></i> 添加
+          </button>
+        </div>
+      </div>
+
+      <!-- 用户管理（仅主admin可见） -->
+      <div id="admin-panel-users" style="display:none">
+        <div id="user-table-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Priority 修改模态框 ── -->
+<div class="modal-overlay" id="modal-priority">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-star"></i> 修改用户 Priority</h3>
+      <button class="modal-close" onclick="closeModal('modal-priority')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="priority-user-label" style="margin-bottom:.8rem;font-weight:500"></p>
+      <div class="form-group">
+        <label>Priority（1–9）</label>
+        <input type="number" id="priority-input" min="1" max="9" value="3" />
+        <span class="form-hint">8及以上为管理员；4-7可提前访问新视频；1-3为普通用户</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-priority')">取消</button>
+      <button class="btn btn-primary" onclick="savePriority()">
+        <i class="fa-solid fa-check"></i> 保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-password">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-key"></i> 修改密码</h3>
+      <button class="modal-close" onclick="closeModal('modal-password')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>当前密码</label>
+        <input type="password" id="pwd-current" autocomplete="current-password" />
+      </div>
+      <div class="form-group">
+        <label>新密码</label>
+        <input type="password" id="pwd-new" minlength="6" autocomplete="new-password" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>确认新密码</label>
+        <input type="password" id="pwd-new2" minlength="6" autocomplete="new-password" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-password')">取消</button>
+      <button class="btn btn-primary" onclick="changePassword()">
+        <i class="fa-solid fa-check"></i> 保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-video-player">
+  <div class="modal video-player-modal">
+    <div class="modal-header">
+      <h3 id="video-player-title"><i class="fa-solid fa-circle-play"></i> 视频播放</h3>
+      <button class="modal-close" onclick="closeVideoPlayer()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <video id="video-player" controls playsinline preload="metadata"></video>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/messages.js"></script>
+<script src="/static/js/admin.js"></script>
+<script src="/static/js/videos.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
