@@ -19,7 +19,7 @@ APP_VERSION = "1.0.0"
 
 # 服务器配置
 SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")
-SERVER_PORT = int(os.getenv("SERVER_PORT", "10123"))
+SERVER_PORT = int(os.getenv("SERVER_PORT", "5002"))
 
 # 默认主admin账号
 DEFAULT_ADMIN_USERNAME = "admin"
