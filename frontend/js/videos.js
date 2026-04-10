@@ -222,6 +222,7 @@ function renderVideoCard(v, currentUser) {
           <a
             class="btn btn-primary btn-sm"
             href="${downloadUrl}"
+            onclick="handleVideoDownload('${v.id}')"
             ${canDownload ? '' : 'style="pointer-events:none;opacity:.4"'}
             title="${canDownload ? '下载视频' : '权限不足'}"
           >
@@ -263,16 +264,23 @@ async function deleteVideo(videoId) {
   }
 }
 
+function handleVideoDownload(videoId) {
+  const currentUser = getCurrentUser();
+  if (!currentUser) return true;
+  applyPublishedState(videoId, {
+    published_count_delta: 1,
+    username: currentUser.username,
+  });
+  return true;
+}
+
 async function togglePublished(videoId) {
   try {
     const data = await apiPost(`/api/videos/${videoId}/published-toggle`, {});
-    const btn = document.getElementById(`published-btn-${videoId}`);
-    const count = document.getElementById(`published-count-${videoId}`);
-    const users = document.getElementById(`published-users-${videoId}`);
-    const publishedCount = data.published_count ?? 0;
-    if (btn) btn.classList.toggle('active', publishedCount > 0);
-    if (count) count.textContent = publishedCount;
-    if (users) users.innerHTML = renderPublishedUsers(data.published_usernames || []);
+    applyPublishedState(videoId, {
+      published_count: data.published_count ?? 0,
+      usernames: data.published_usernames || [],
+    });
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -281,6 +289,33 @@ async function togglePublished(videoId) {
 function renderPublishedUsers(usernames) {
   if (!usernames.length) return '';
   return usernames.map(name => `<span class="quick-reply-user">${escapeHtml(name)}</span>`).join('');
+}
+
+function applyPublishedState(videoId, payload) {
+  const btn = document.getElementById(`published-btn-${videoId}`);
+  const countEl = document.getElementById(`published-count-${videoId}`);
+  const usersEl = document.getElementById(`published-users-${videoId}`);
+  if (!btn || !countEl || !usersEl) return;
+
+  const currentCount = parseInt(countEl.textContent || '0', 10) || 0;
+  const currentUsers = Array.from(usersEl.querySelectorAll('.quick-reply-user')).map(el => el.textContent.trim()).filter(Boolean);
+
+  let nextCount = currentCount;
+  let nextUsers = currentUsers;
+
+  if (Array.isArray(payload.usernames)) {
+    nextUsers = payload.usernames;
+    nextCount = payload.published_count ?? nextUsers.length;
+  } else if (payload.username) {
+    if (!currentUsers.includes(payload.username)) {
+      nextUsers = [...currentUsers, payload.username];
+      nextCount = Math.max(currentCount + (payload.published_count_delta || 0), nextUsers.length);
+    }
+  }
+
+  btn.classList.toggle('active', nextCount > 0);
+  countEl.textContent = nextCount;
+  usersEl.innerHTML = renderPublishedUsers(nextUsers);
 }
 
 function openVideoPlayer(videoId, title) {

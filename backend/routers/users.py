@@ -16,10 +16,9 @@ def list_users(current_user: dict = Depends(require_admin)):
     """
     获取用户列表。
     - priority >= 8 的用户可访问。
-    - priority 字段仅主 admin 可见。
+    - 管理员及以上可查看。
     """
     users = storage.get_users()
-    is_main = current_user.get("is_main_admin", False)
 
     result = []
     for u in users:
@@ -28,9 +27,8 @@ def list_users(current_user: dict = Depends(require_admin)):
             "username": u["username"],
             "is_main_admin": u.get("is_main_admin", False),
             "created_at": u.get("created_at", ""),
+            "priority": u["priority"],
         }
-        if is_main:
-            item["priority"] = u["priority"]
         result.append(item)
     return result
 

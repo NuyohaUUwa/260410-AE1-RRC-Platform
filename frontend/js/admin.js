@@ -59,20 +59,31 @@ function openAdminPanel() {
 function switchAdminTab(tab) {
   const toolsPanel = document.getElementById('admin-panel-tools');
   const usersPanel = document.getElementById('admin-panel-users');
+  const logsPanel = document.getElementById('admin-panel-logs');
   const tabs = document.querySelectorAll('#admin-tabs .login-tab');
 
-  tabs.forEach((t, i) => {
-    t.classList.toggle('active', (tab === 'tools' && i === 0) || (tab === 'users' && i === 1));
+  tabs.forEach((t) => {
+    const isTools = tab === 'tools' && t.textContent.trim() === '工具链接';
+    const isUsers = tab === 'users' && t.textContent.trim() === '用户管理';
+    const isLogs = tab === 'logs' && t.textContent.trim() === '日志';
+    t.classList.toggle('active', isTools || isUsers || isLogs);
   });
 
   if (tab === 'tools') {
     toolsPanel.style.display = '';
     usersPanel.style.display = 'none';
+    if (logsPanel) logsPanel.style.display = 'none';
     loadToolManageList();
-  } else {
+  } else if (tab === 'users') {
     toolsPanel.style.display = 'none';
     usersPanel.style.display = '';
+    if (logsPanel) logsPanel.style.display = 'none';
     loadUserTable();
+  } else {
+    toolsPanel.style.display = 'none';
+    usersPanel.style.display = 'none';
+    if (logsPanel) logsPanel.style.display = '';
+    loadVideoLogs();
   }
 }
 
@@ -165,10 +176,11 @@ async function loadUserTable() {
   if (!wrap) return;
 
   const currentUser = getCurrentUser();
-  if (!currentUser || !currentUser.is_main_admin) {
-    wrap.innerHTML = '<p style="color:var(--text-muted)">仅主管理员可查看用户管理</p>';
+  if (!currentUser || Number(currentUser.priority) < 8) {
+    wrap.innerHTML = '<p style="color:var(--text-muted)">仅管理员及以上可查看用户管理</p>';
     return;
   }
+  const canEdit = !!currentUser.is_main_admin;
 
   try {
     const users = await apiGet('/api/users');
@@ -199,12 +211,56 @@ async function loadUserTable() {
                   <td><span class="badge ${pl.cls}">${pl.text}</span></td>
                   <td>${formatDate(u.created_at)}</td>
                   <td>
-                    ${!isMain ? `<button class="btn btn-ghost btn-sm" onclick="openPriorityModal('${u.id}', '${escapeHtml(u.username)}', ${u.priority ?? 3})">
+                    ${canEdit && !isMain ? `<button class="btn btn-ghost btn-sm" onclick="openPriorityModal('${u.id}', '${escapeHtml(u.username)}', ${u.priority ?? 3})">
                       <i class="fa-solid fa-star"></i> 修改
-                    </button>` : '<span style="color:var(--text-light);font-size:.82rem">不可修改</span>'}
+                    </button>` : '<span style="color:var(--text-light);font-size:.82rem">只读</span>'}
                   </td>
                 </tr>`;
             }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    wrap.innerHTML = `<p style="color:var(--danger)">${err.message}</p>`;
+  }
+}
+
+async function loadVideoLogs() {
+  const wrap = document.getElementById('video-log-wrap');
+  if (!wrap) return;
+
+  const currentUser = getCurrentUser();
+  if (!currentUser || !currentUser.is_main_admin) {
+    wrap.innerHTML = '<p style="color:var(--text-muted)">仅主管理员可查看日志</p>';
+    return;
+  }
+
+  try {
+    const logs = await apiGet('/api/videos/logs');
+    if (!logs.length) {
+      wrap.innerHTML = '<p style="color:var(--text-muted)">暂无日志</p>';
+      return;
+    }
+    wrap.innerHTML = `
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>操作</th>
+              <th>用户</th>
+              <th>视频</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logs.map(log => `
+              <tr>
+                <td>${formatDate(log.created_at)}</td>
+                <td>${log.action === 'upload' ? '上传' : '下载'}</td>
+                <td>${escapeHtml(log.username || '')}</td>
+                <td>${escapeHtml(log.video_title || '')}</td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
       </div>`;

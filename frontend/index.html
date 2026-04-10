@@ -186,7 +186,8 @@
       <!-- Tab -->
       <div class="login-tabs" id="admin-tabs" style="margin-bottom:1.2rem">
         <button class="login-tab active" onclick="switchAdminTab('tools')">工具链接</button>
-        <button class="login-tab" id="admin-tab-users" onclick="switchAdminTab('users')">用户管理</button>
+        <button class="login-tab" id="admin-tab-users" onclick="switchAdminTab('users')" style="display:none">用户管理</button>
+        <button class="login-tab" id="admin-tab-logs" onclick="switchAdminTab('logs')" style="display:none">日志</button>
       </div>
 
       <!-- 工具链接管理 -->
@@ -222,6 +223,10 @@
       <!-- 用户管理（仅主admin可见） -->
       <div id="admin-panel-users" style="display:none">
         <div id="user-table-wrap"></div>
+      </div>
+
+      <div id="admin-panel-logs" style="display:none">
+        <div id="video-log-wrap"></div>
       </div>
     </div>
   </div>

@@ -154,7 +154,6 @@ function formatDate(isoStr) {
 
 function priorityLabel(priority) {
   if (priority >= 10) return { text: '主管理员', cls: 'badge-danger' };
-  if (priority >= 8)  return { text: `管理员 P${priority}`, cls: 'badge-warning' };
-  if (priority >= 4)  return { text: `高级用户 P${priority}`, cls: 'badge-primary' };
-  return { text: `用户 P${priority}`, cls: 'badge-gray' };
+  if (priority >= 8)  return { text: '管理员', cls: 'badge-warning' };
+  return { text: '用户', cls: 'badge-gray' };
 }

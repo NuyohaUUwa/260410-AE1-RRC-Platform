@@ -24,6 +24,29 @@ router = APIRouter(prefix="/api/videos", tags=["videos"])
 CHUNK_SIZE = 1024 * 1024  # 1MB
 
 
+def _append_video_log(action: str, video: dict, user: dict):
+    logs = storage.get_video_logs()
+    logs.append({
+        "id": str(uuid.uuid4()),
+        "action": action,
+        "video_id": video["id"],
+        "video_title": video["title"],
+        "user_id": user["id"],
+        "username": user["username"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    storage.save_video_logs(logs)
+
+
+def _ensure_published_by_user(video: dict, user: dict) -> bool:
+    published_user_ids = video.setdefault("published_user_ids", [])
+    user_id = user["id"]
+    if user_id in published_user_ids:
+        return False
+    published_user_ids.append(user_id)
+    return True
+
+
 def _is_locked(upload_time_str: str) -> bool:
     """判断视频是否还在30分钟锁定期内。"""
     try:
@@ -132,6 +155,7 @@ async def upload_video(
     }
     videos.append(new_video)
     storage.save_videos(videos)
+    _append_video_log("upload", new_video, current_user)
 
     return {"message": "上传成功", "video": _video_response(new_video, current_user)}
 
@@ -237,7 +261,9 @@ def download_video(video_id: str, current_user: dict = Depends(get_current_user_
 
     # 增加下载计数
     video["download_count"] = video.get("download_count", 0) + 1
+    _ensure_published_by_user(video, current_user)
     storage.save_videos(videos)
+    _append_video_log("download", video, current_user)
 
     return FileResponse(
         path=str(file_path),
@@ -307,3 +333,11 @@ def delete_video(video_id: str, current_user: dict = Depends(get_current_user)):
     videos = [v for v in videos if v["id"] != video_id]
     storage.save_videos(videos)
     return {"message": "视频已删除"}
+
+
+@router.get("/logs")
+def list_video_logs(current_user: dict = Depends(get_current_user)):
+    if not current_user.get("is_main_admin"):
+        raise HTTPException(status_code=403, detail="仅主管理员可查看日志")
+    logs = storage.get_video_logs()
+    return sorted(logs, key=lambda x: x.get("created_at", ""), reverse=True)

@@ -78,3 +78,11 @@ def get_messages() -> list:
 
 def save_messages(messages: list):
     write_json("messages.json", messages)
+
+
+def get_video_logs() -> list:
+    return read_json("video_logs.json", [])
+
+
+def save_video_logs(logs: list):
+    write_json("video_logs.json", logs)

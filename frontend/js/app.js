@@ -34,11 +34,10 @@
   const adminBtn = document.getElementById('btn-admin-panel');
   if (adminBtn && user.priority >= 8) {
     adminBtn.style.display = '';
-    // 仅主admin显示用户管理 tab
-    if (user.is_main_admin) {
-      const userTab = document.getElementById('admin-tab-users');
-      if (userTab) userTab.style.display = '';
-    }
+    const userTab = document.getElementById('admin-tab-users');
+    if (userTab) userTab.style.display = '';
+    const logsTab = document.getElementById('admin-tab-logs');
+    if (logsTab && user.is_main_admin) logsTab.style.display = '';
   }
 
   // 显示公告编辑按钮（priority >= 8）
